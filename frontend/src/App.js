@@ -1,9 +1,9 @@
 import "./App.css";
-
+import BlogRoutes from "./pages/Blog/Routes/BlogRoutes.mjs";
 function App() {
   return (
-    <div className="App">
-      <h1>hello react</h1>
+    <div className="App" style={{ marginTop: "55px" }}>
+      <BlogRoutes />
     </div>
   );
 }
