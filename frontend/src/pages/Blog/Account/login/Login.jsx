@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Box, TextField, Button, styled, Typography } from "@mui/material";
-
+import { API } from "../../service/api.mjs";
+import { blogData } from "../../hooks/DataProvider";
+import { useNavigate } from "react-router-dom";
 //const
 const imageURL =
   "https://www.sesta.it/wp-content/uploads/2021/03/logo-blog-sesta-trasparente.png";
@@ -46,22 +48,90 @@ const SignupButton = styled(Button)`
   border-radius: 2px;
   box-shadow: 0 2px 4px 0 rgb(0 0 0 / 20%);
 `;
-function Login() {
+function Login({ setUserAuthenticated }) {
   const [account, toggleAccount] = useState("login");
-
+  const [signUp, setSignUp] = useState({});
+  const [login, setLogin] = useState({
+    userName: "",
+    password: "",
+  });
+  const navigate = useNavigate();
+  const { userData, setUserData } = useContext(blogData);
   //functions
   const toggleSignUp = () => {
     account === "login" ? toggleAccount("signUp") : toggleAccount("login");
   };
+
+  const onInputChange = (e) => {
+    setSignUp({ ...signUp, [e.target.name]: e.target.value });
+  };
+
+  const onLoginValueChange = (e) => {
+    setLogin({ ...login, [e.target.name]: e.target.value });
+  };
+  async function SignUp() {
+    try {
+      let response = await API.userSignUp(signUp);
+
+      if (response) {
+        setSignUp("");
+        toggleAccount("login");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function onlogin() {
+    try {
+      let response = await API.userLogin(login);
+
+      if (response) {
+        setLogin({ username: "", password: "" });
+        toggleAccount("login");
+        localStorage.setItem("accessToken", `bearer ${response.Data.token}`);
+        setUserData({
+          name: response.Data.isUser.name,
+          userName: response.Data.isUser.username,
+        });
+        setUserAuthenticated(true);
+
+        navigate("/blog");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <Component>
       <Box>
         <Image src={imageURL} alt="login" />
         {account === "login" ? (
           <Wrapper>
-            <TextField variant="standard" label="Enter user name" />
-            <TextField variant="standard" label="Enter your password" />
-            <LoginButton variant="contained">Login</LoginButton>
+            <TextField
+              variant="standard"
+              label="Enter user name"
+              name="userName"
+              value={login.userName}
+              onChange={(e) => onLoginValueChange(e)}
+            />
+            <TextField
+              variant="standard"
+              label="Enter your password"
+              type="password"
+              name="password"
+              value={login.password}
+              onChange={(e) => onLoginValueChange(e)}
+            />
+            <LoginButton
+              variant="contained"
+              onClick={() => {
+                onlogin();
+              }}
+            >
+              Login
+            </LoginButton>
             <Typography>OR</Typography>
             <SignupButton onClick={() => toggleSignUp()}>
               Create an Account
@@ -69,10 +139,26 @@ function Login() {
           </Wrapper>
         ) : (
           <Wrapper>
-            <TextField variant="standard" label="Enter your name" />
-            <TextField variant="standard" label="Enter your username" />
-            <TextField variant="standard" label="Enter your password" />
-            <SignupButton>Sign Up</SignupButton>
+            <TextField
+              variant="standard"
+              label="Enter your name"
+              name="name"
+              onChange={(e) => onInputChange(e)}
+            />
+            <TextField
+              variant="standard"
+              label="Enter your username"
+              name="username"
+              onChange={(e) => onInputChange(e)}
+            />
+            <TextField
+              variant="standard"
+              label="Enter your password"
+              name="password"
+              type="password"
+              onChange={(e) => onInputChange(e)}
+            />
+            <SignupButton onClick={() => SignUp()}>Sign Up</SignupButton>
             <Typography>OR</Typography>
             <LoginButton variant="contained" onClick={() => toggleSignUp()}>
               Already have an account
